@@ -1753,7 +1753,7 @@ export default function App() {
         <header className="bg-emerald-950 text-white">
           <div className="max-w-5xl mx-auto px-6 py-10">
             <div className="flex items-baseline gap-3">
-              <h1 className="text-3xl tracking-tight font-semibold">Reposy</h1>
+              <h1 className="text-3xl tracking-tight font-semibold">Reposy-USG</h1>
               <Chip tone="pale">structured ultrasound reporting</Chip>
             </div>
             <p className="mt-3 text-emerald-200 max-w-xl text-sm leading-relaxed">
