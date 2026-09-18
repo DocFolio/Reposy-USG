@@ -1522,7 +1522,7 @@ const MODALITIES = [ABDOMEN, KUB, PELVIS, OBS, SOFT, THYROID, BREAST, SCROTUM, N
    text is CC BY-NC-SA and belongs on their site, kept current by them. */
 const KNOWLEDGE_TERMS = [
   ["fatty change|hepatic steatosis|fatty liver", "Hepatic steatosis"],
-  ["cirrhosis|nodular echotexture|coarse echotexture", "Cirrhosis"],
+  ["cirrhosis|nodular echotexture|Liver surface appears nodular", "Cirrhosis", ["abdomen"]],
   ["hepatomegaly", "Hepatomegaly"],
   ["haemangioma|hemangioma", "Hepatic haemangioma"],
   ["portal vein thrombosis", "Portal vein thrombosis"],
@@ -1542,7 +1542,7 @@ const KNOWLEDGE_TERMS = [
   ["simple cortical cyst", "Simple renal cyst"],
   ["post-void residual", "Post-void residual volume"],
   ["prostate is enlarged|median lobe indents", "Benign prostatic hyperplasia"],
-  ["trabeculated", "Bladder wall trabeculation"],
+  ["trabeculated", "Bladder wall trabeculation", ["abdomen", "kub"]],
   ["adenomyosis|venetian-blind", "Adenomyosis"],
   ["fibroid|leiomyoma", "Uterine leiomyoma"],
   ["endometrial polyp", "Endometrial polyp"],
@@ -1559,7 +1559,7 @@ const KNOWLEDGE_TERMS = [
   ["accreta", "Placenta accreta spectrum"],
   ["nuchal translucency", "Nuchal translucency"],
   ["loops? around the neck", "Nuchal cord"],
-  ["breech", "Breech presentation"],
+  ["breech", "Breech presentation", ["obs"]],
   ["absent a-wave|reversed a-wave", "Ductus venosus Doppler"],
   ["end-diastolic flow (?:reduced|absent|reversed)", "Umbilical artery Doppler"],
   ["cerebroplacental ratio", "Cerebroplacental ratio"],
@@ -1582,34 +1582,41 @@ const KNOWLEDGE_TERMS = [
   ["varicocele", "Varicocele"],
   ["hydrocele", "Hydrocele"],
   ["epididymo-orchitis|bulky and hypoechoic.{0,40}increased vascularity", "Epididymo-orchitis"],
-  ["torsion|transverse lie", "Testicular torsion"],
+  ["absent on the (?:right|left)|transverse lie on the", "Testicular torsion", ["scrotum"]],
   ["microlithiasis", "Testicular microlithiasis"],
-  ["germinal matrix|intraventricular haemorrhage", "Germinal matrix haemorrhage"],
-  ["periventricular|cystic PVL", "Periventricular leukomalacia"],
+  ["germinal matrix|intraventricular haemorrhage", "Germinal matrix haemorrhage", ["nsg"]],
+  ["cystic PVL|periventricular cystic change", "Periventricular leukomalacia", ["nsg"]],
   ["cavum septi pellucidi", "Cavum septi pellucidi"],
-  ["deep vein thrombosis|non-compressible|acute hypoechoic thrombus", "Deep vein thrombosis"],
-  ["chronic echogenic thrombus|recanalisation", "Chronic deep vein thrombosis"],
-  ["saphenous.{0,30}reflux|incompetent perforators|reflux at the saphenofemoral", "Venous insufficiency"],
+  ["deep vein thrombosis|acute hypoechoic thrombus|non-compressible", "Deep vein thrombosis", ["venous"]],
+  ["chronic echogenic thrombus|recanalisation", "Chronic deep vein thrombosis", ["venous"]],
+  ["saphenous.{0,30}reflux|incompetent perforators", "Venous insufficiency", ["venous"]],
   ["Baker's cyst", "Baker cyst"],
-  ["monophasic|triphasic|biphasic", "Peripheral arterial Doppler waveforms"],
-  ["complete occlusion", "Peripheral arterial disease"],
-  ["aneurysmal", "Arterial aneurysm"],
+  ["monophasic", "Peripheral arterial Doppler waveforms", ["arterial"]],
+  ["complete occlusion", "Peripheral arterial disease", ["arterial"]],
+  ["aneurysmal", "Arterial aneurysm", ["arterial", "abdomen"]],
   ["intima-media thickness", "Carotid intima-media thickness"],
   ["ulcerated plaque|calcific plaque|soft plaque", "Carotid atherosclerosis"],
   ["vertebral.{0,40}reversed|subclavian steal", "Subclavian steal syndrome"],
   ["appendicitis|appendicolith", "Acute appendicitis"],
   ["pleural effusion", "Pleural effusion"],
-  ["consolidation|air bronchograms", "Lung consolidation"],
+  ["consolidation|air bronchograms", "Lung consolidation", ["chest"]],
   ["B-lines", "Lung ultrasound B-lines"],
   ["pneumothorax|Lung sliding is absent", "Pneumothorax"],
   ["lipoma", "Lipoma"],
-  ["abscess|thick-walled collection with internal debris", "Soft tissue abscess"],
+  ["haematoma|hematoma", "Haematoma"],
+  ["vascular malformation|venous malformation", "Vascular malformation"],
+  ["neurofibroma|schwannoma|nerve sheath", "Peripheral nerve sheath tumour"],
+  ["sarcoma", "Soft tissue sarcoma"],
+  ["pilomatricoma", "Pilomatricoma"],
+  ["dermoid", "Dermoid cyst"],
+  ["seroma", "Seroma"],
+  ["abscess|thick-walled collection with internal debris", "Soft tissue abscess", ["soft", "rif", "msk"]],
   ["sebaceous|epidermoid", "Epidermoid cyst"],
   ["ganglion", "Ganglion cyst"],
   ["cobblestoning|oedematous subcutaneous", "Cellulitis"],
-  ["sinus tract", "Sinus tract"],
-  ["foreign body", "Soft tissue foreign body"],
-  ["tendinosis|thickened and hypoechoic", "Tendinosis"],
+  ["sinus tract", "Sinus tract", ["soft"]],
+  ["foreign body is identified", "Soft tissue foreign body", ["soft", "msk"]],
+  ["tendinosis", "Tendinosis", ["msk"]],
   ["full thickness tear|partial thickness tear", "Tendon tear"],
   ["bursa.{0,30}distended|bursitis", "Bursitis"],
   ["synovial thickening", "Synovitis"],
@@ -1621,11 +1628,37 @@ const KNOWLEDGE_TERMS = [
 const RADIOPAEDIA = (term) =>
   `https://radiopaedia.org/search?q=${encodeURIComponent(term)}&scope=articles`;
 
-function knowledgeTopics(text) {
+const DX_LEAD = /(?:suggestive of|suspicious for|likely represents|likely a|consistent with|in keeping with|features of|compatible with|may represent|represents)\s+(?:a |an |the )?([a-z][a-z0-9 ,'-]{3,60}?)(?=\s+or\s+|[.;,)]|$)/gi;
+const DX_ALT = /\bor\s+(?:a |an |the )?([a-z][a-z0-9 '-]{3,60}?)(?=[.;,)]|$)/gi;
+const DX_NOISE = /^(?:the|this|these|which|further|clinical|correlation|no |any )/i;
+
+function impressionDiagnoses(text) {
+  if (!text) return [];
+  const imp = text.split(/\bIMPRESSION\b/i)[1];
+  if (!imp) return [];
+  const body = imp.split(/\bADVICE\b/i)[0];
+  const out = [];
+  for (const re of [DX_LEAD, DX_ALT]) {
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(body))) {
+      const t = m[1].trim().replace(/\s+/g, " ");
+      if (t.length > 3 && !DX_NOISE.test(t) && !out.includes(t)) out.push(t);
+    }
+  }
+  return out.slice(0, 6);
+}
+
+function knowledgeTopics(text, modId) {
   if (!text) return [];
   const hits = [];
-  for (const [pattern, label] of KNOWLEDGE_TERMS) {
+  for (const [pattern, label, mods] of KNOWLEDGE_TERMS) {
+    if (mods && modId && !mods.includes(modId)) continue;
     if (new RegExp(pattern, "i").test(text) && !hits.includes(label)) hits.push(label);
+  }
+  for (const d of impressionDiagnoses(text)) {
+    const dup = hits.some((h) => h.toLowerCase().includes(d.toLowerCase()) || d.toLowerCase().includes(h.toLowerCase()));
+    if (!dup) hits.push(d.charAt(0).toUpperCase() + d.slice(1));
   }
   return hits;
 }
@@ -1850,9 +1883,9 @@ function SegTable({ cfg, value, onChange, upper }) {
 }
 
 
-function KnowledgeCorner({ text, custom, setCustom }) {
+function KnowledgeCorner({ text, custom, setCustom, modId }) {
   const [open, setOpen] = useState(false);
-  const topics = useMemo(() => knowledgeTopics(text), [text]);
+  const topics = useMemo(() => knowledgeTopics(text, modId), [text, modId]);
   const go = (t) => { if (t && t.trim()) window.open(RADIOPAEDIA(t.trim()), "_blank", "noopener"); };
 
   return (
@@ -2170,7 +2203,7 @@ export default function App() {
             <pre className="p-4 text-[13px] leading-6 text-emerald-950 whitespace-pre-wrap max-h-[30rem] overflow-y-auto font-sans">{fullReport || "Selections will appear here as you fill the form."}</pre>
           </div>
 
-          <KnowledgeCorner text={fullReport} custom={kcTerm} setCustom={setKcTerm} />
+          <KnowledgeCorner text={fullReport} modId={mod.id} custom={kcTerm} setCustom={setKcTerm} />
 
           <div className="bg-white border border-emerald-200 rounded-xl shadow-sm p-4 space-y-3">
             <TextIn area label="Impression (write it yourself)" value={impression} onChange={setImpression} placeholder="1. …" />

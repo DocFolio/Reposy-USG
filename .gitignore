@@ -3,3 +3,5 @@ dist
 .env
 server.js
 .DS_Store
+.vercel
+.env*
