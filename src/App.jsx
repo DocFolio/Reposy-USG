@@ -1862,9 +1862,21 @@ export default function App() {
               </div>
             </section>
           ))}
-          <p className="text-xs text-emerald-700 border-t border-emerald-200 pt-4">
-            Findings text only — paste it into your existing reporting system. No patient identifiers are collected or stored.
-          </p>
+          <div className="border-t-2 border-emerald-200 pt-5 mt-2 space-y-3">
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+              <p className="text-sm font-semibold text-amber-900 mb-1">A drafting aid, not a diagnosis</p>
+              <p className="text-[13px] text-amber-900/90 leading-relaxed">
+                Reposy-USG assembles report text from what you select and can draft an impression using a language model.
+                It does not interpret images and cannot examine a patient. Every finding, measurement and impression must be
+                verified by the reporting radiologist before the report is signed or acted upon. Clinical responsibility
+                rests entirely with the reporting doctor.
+              </p>
+            </div>
+            <p className="text-xs text-emerald-700 leading-relaxed">
+              Findings text only — paste it into your existing reporting system. Enter no patient names or identifiers:
+              nothing you type is stored, but the text you enter is sent to a third-party model provider to draft the impression.
+            </p>
+          </div>
         </main>
       </div>
     );
@@ -2006,7 +2018,7 @@ export default function App() {
           </div>
 
           <p className="text-xs text-emerald-700 leading-snug">
-            The findings text is generated from your selections alone. The AI only drafts the impression and cannot add a finding you did not select.
+            Generated from your selections alone — the AI drafts only the impression and cannot add a finding you did not select. Verify everything before signing.
           </p>
         </aside>
       </div>
