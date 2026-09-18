@@ -1737,7 +1737,7 @@ export default function App() {
       const out = await callAI(cfg, AI_SYSTEM, `Modality: ${mod.name}\n\nFINDINGS\n${findings}`);
       setAiOut(out.trim());
     } catch (e) {
-      setErr(`Could not reach the model: ${e.message}. If you are calling a provider directly from the browser, route it through your own backend instead — most providers block browser origins.`);
+      setErr(`The impression service is unavailable right now (${e.message}). The report above is complete — write the impression yourself, or try again shortly.`);
     } finally { setBusy(false); }
   };
 
@@ -1798,7 +1798,6 @@ export default function App() {
           <div className="ml-auto flex gap-2">
             <button onClick={fillRestNormal} className="text-xs font-semibold px-3 py-1.5 bg-white text-emerald-900 rounded-lg hover:bg-emerald-100 transition-colors">Rest all normal</button>
             <button onClick={fillAllNormal} className="text-xs px-3 py-1.5 border border-emerald-600 text-emerald-100 rounded-lg hover:bg-emerald-800 transition-colors">Entire study normal</button>
-            <button onClick={() => setShowCfg(!showCfg)} className="text-xs px-3 py-1.5 border border-emerald-600 text-emerald-100 rounded-lg hover:bg-emerald-800 transition-colors">AI settings</button>
           </div>
         </div>
         {showCfg && (
