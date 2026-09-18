@@ -2170,6 +2170,8 @@ export default function App() {
             <pre className="p-4 text-[13px] leading-6 text-emerald-950 whitespace-pre-wrap max-h-[30rem] overflow-y-auto font-sans">{fullReport || "Selections will appear here as you fill the form."}</pre>
           </div>
 
+          <KnowledgeCorner text={fullReport} custom={kcTerm} setCustom={setKcTerm} />
+
           <div className="bg-white border border-emerald-200 rounded-xl shadow-sm p-4 space-y-3">
             <TextIn area label="Impression (write it yourself)" value={impression} onChange={setImpression} placeholder="1. …" />
             <button onClick={runAI} disabled={busy || !findings}
@@ -2187,8 +2189,6 @@ export default function App() {
             )}
             {err && <p className="text-xs text-red-700 leading-snug">{err}</p>}
           </div>
-
-          <KnowledgeCorner text={fullReport} custom={kcTerm} setCustom={setKcTerm} />
 
           <p className="text-xs text-emerald-700 leading-snug">
             Generated from your selections alone — the AI drafts only the impression and cannot add a finding you did not select. Verify everything before signing.
