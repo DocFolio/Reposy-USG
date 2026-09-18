@@ -1557,7 +1557,7 @@ function TextIn({ label, value, onChange, placeholder, area }) {
 
 /* --- lesion editor --- */
 function LesionEditor({ cfg, list, onChange }) {
-  const arr = list || [];
+  const arr = list && list.length ? list : [blankLesion()];
   const upd = (i, patch) => onChange(arr.map((L, k) => (k === i ? { ...L, ...patch } : L)));
   const updExtra = (i, key, val) => onChange(arr.map((L, k) => (k === i ? { ...L, extras: { ...L.extras, [key]: val } } : L)));
 
@@ -1790,7 +1790,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-emerald-50/60">
-      <header className="bg-emerald-950 text-white sticky top-0 z-20">
+      <header className="bg-emerald-950 text-white">
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
           <button onClick={() => setModId(null)} className="text-sm underline decoration-emerald-500 hover:no-underline">All studies</button>
           <span className="text-emerald-600">/</span>
