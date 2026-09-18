@@ -1795,10 +1795,6 @@ export default function App() {
           <button onClick={() => setModId(null)} className="text-sm underline decoration-emerald-500 hover:no-underline">All studies</button>
           <span className="text-emerald-600">/</span>
           <h1 className="text-lg">{mod.name}</h1>
-          <div className="ml-auto flex gap-2">
-            <button onClick={fillRestNormal} className="text-xs font-semibold px-3 py-1.5 bg-white text-emerald-900 rounded-lg hover:bg-emerald-100 transition-colors">Rest all normal</button>
-            <button onClick={fillAllNormal} className="text-xs px-3 py-1.5 border border-emerald-600 text-emerald-100 rounded-lg hover:bg-emerald-800 transition-colors">Entire study normal</button>
-          </div>
         </div>
         {showCfg && (
           <div className="bg-emerald-800 border-t border-emerald-700">
@@ -1836,6 +1832,12 @@ export default function App() {
       <div className="max-w-7xl mx-auto px-4 py-6 grid lg:grid-cols-[1fr_26rem] gap-6 items-start">
         {/* form column */}
         <div className="space-y-4">
+          <div className="flex flex-wrap gap-2 items-center">
+            <button onClick={fillRestNormal} title="Keep everything you have typed, fill all remaining blanks with normals"
+              className="text-sm font-semibold px-4 py-2 bg-emerald-700 text-white rounded-lg shadow-sm hover:bg-emerald-800 transition-colors">Rest all normal</button>
+            <button onClick={fillAllNormal} title="Reset the whole study to normal"
+              className="text-sm font-semibold px-4 py-2 bg-white text-emerald-800 border-2 border-emerald-300 rounded-lg hover:bg-emerald-100 transition-colors">Entire study normal</button>
+          </div>
           {visible.map((sec) => {
             const v = state[sec.id] || {};
             const on = enabled[sec.id] !== false;
