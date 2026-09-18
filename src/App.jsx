@@ -35,6 +35,79 @@ const listAnd = (arr) => {
 const numWord = (n) =>
   ({ 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six" }[n] || String(n));
 
+
+/* One explicit range per numeric field, keyed modality.section.field.
+   Out-of-range values are flagged, never blocked. Lower bounds are
+   paediatric-tolerant on organs that scale with age. */
+const FIELD_RANGES = {
+  "abdomen.liver.size": [4, 30], "abdomen.liver.pv": [2, 25],
+  "abdomen.gb.wall": [0.5, 15], "abdomen.gb.calcsize": [1, 60],
+  "abdomen.gb.polypsize": [1, 40], "abdomen.gb.cbd": [1, 25],
+  "abdomen.panc.ductsize": [1, 15], "abdomen.spleen.size": [3, 25],
+  "abdomen.rk.size1": [2, 18], "abdomen.rk.size2": [1, 10], "abdomen.rk.ct": [1, 25],
+  "abdomen.rk.calcsize": [1, 60], "abdomen.rk.cystsize": [1, 150],
+  "abdomen.lk.size1": [2, 18], "abdomen.lk.size2": [1, 10], "abdomen.lk.ct": [1, 25],
+  "abdomen.lk.calcsize": [1, 60], "abdomen.lk.cystsize": [1, 150],
+  "abdomen.ureter.calcsize": [1, 30],
+  "abdomen.bladder.wall": [0.5, 20], "abdomen.bladder.calcsize": [1, 80],
+  "abdomen.bladder.massSize": [1, 120],
+  "abdomen.bladder.a": [1, 20], "abdomen.bladder.b": [1, 20], "abdomen.bladder.c": [1, 20],
+  "abdomen.bladder.pa": [0, 20], "abdomen.bladder.pb": [0, 20], "abdomen.bladder.pc": [0, 20],
+  "abdomen.prostate.a": [1, 12], "abdomen.prostate.b": [1, 12], "abdomen.prostate.c": [1, 12],
+  "abdomen.misc.aortaSize": [0.5, 12], "abdomen.misc.nodeSize": [1, 80],
+  "kub.rk.size1": [2, 18], "kub.rk.size2": [1, 10], "kub.rk.ct": [1, 25],
+  "kub.rk.calcsize": [1, 60], "kub.rk.cystsize": [1, 150],
+  "kub.lk.size1": [2, 18], "kub.lk.size2": [1, 10], "kub.lk.ct": [1, 25],
+  "kub.lk.calcsize": [1, 60], "kub.lk.cystsize": [1, 150],
+  "kub.ureter.calcsize": [1, 30],
+  "kub.bladder.wall": [0.5, 20], "kub.bladder.calcsize": [1, 80], "kub.bladder.massSize": [1, 120],
+  "kub.bladder.a": [1, 20], "kub.bladder.b": [1, 20], "kub.bladder.c": [1, 20],
+  "kub.bladder.pa": [0, 20], "kub.bladder.pb": [0, 20], "kub.bladder.pc": [0, 20],
+  "kub.prostate.a": [1, 12], "kub.prostate.b": [1, 12], "kub.prostate.c": [1, 12],
+  "pelvis.uterus.a": [2, 20], "pelvis.uterus.b": [1, 15], "pelvis.uterus.c": [1, 15],
+  "pelvis.endo.et": [0.5, 40], "pelvis.endo.polypSize": [1, 50],
+  "pelvis.ro.a": [0.5, 15], "pelvis.ro.b": [0.5, 15], "pelvis.ro.c": [0.5, 15],
+  "pelvis.ro.fol": [0, 60], "pelvis.ro.dom": [1, 40],
+  "pelvis.lo.a": [0.5, 15], "pelvis.lo.b": [0.5, 15], "pelvis.lo.c": [0.5, 15],
+  "pelvis.lo.fol": [0, 60], "pelvis.lo.dom": [1, 40],
+  "soft.surround.collVol": [0, 2000], "soft.surround.nodeSize": [1, 80],
+  "thyroid.gland.ra": [0.5, 12], "thyroid.gland.rb": [0.5, 12], "thyroid.gland.rc": [0.5, 12],
+  "thyroid.gland.la": [0.5, 12], "thyroid.gland.lb": [0.5, 12], "thyroid.gland.lc": [0.5, 12],
+  "thyroid.gland.isth": [0.5, 25],
+  "thyroid.nodule.maxdim": [0.1, 15], "thyroid.nodes.size": [1, 60],
+  "breast.bg.ductSize": [0.5, 20], "breast.ax.cortex": [0.5, 20],
+  "scrotum.testes.ra": [0.5, 8], "scrotum.testes.rb": [0.5, 8], "scrotum.testes.rc": [0.5, 8],
+  "scrotum.testes.la": [0.5, 8], "scrotum.testes.lb": [0.5, 8], "scrotum.testes.lc": [0.5, 8],
+  "scrotum.epi.vein": [1, 12],
+  "nsg.vent.rvent": [1, 40], "nsg.vent.lvent": [1, 40], "nsg.hem.ri": [0.3, 1.2],
+  "venous.reflux.gsvT": [0, 20],
+  "arterial.abi.rAbi": [0, 2], "arterial.abi.lAbi": [0, 2], "arterial.abi.aneurSize": [0.5, 15],
+  "carotid.imt.rImt": [0.2, 3], "carotid.imt.lImt": [0.2, 3], "carotid.imt.plaqueTh": [0.5, 15],
+  "carotid.vel.rCca": [5, 600], "carotid.vel.rIca": [5, 600], "carotid.vel.rEca": [5, 600],
+  "carotid.vel.lCca": [5, 600], "carotid.vel.lIca": [5, 600], "carotid.vel.lEca": [5, 600],
+  "rif.app.dia": [2, 25], "rif.app.wall": [0.5, 10], "rif.app.collVol": [0, 1000],
+  "chest.pl.rVol": [0, 5000], "chest.pl.lVol": [0, 5000],
+  "msk.joint.effDepth": [0.5, 60],
+  "obs.type.fhr": [80, 220],
+  "obs.early.msd": [1, 60], "obs.early.yolkSize": [1, 12],
+  "obs.early.schVol": [0, 500], "obs.early.cxLen": [5, 60],
+  "obs.crl.crl": [1, 95],
+  "obs.nt.nt": [0.5, 12], "obs.nt.dvPi": [0, 3], "obs.nt.utPi": [0, 4],
+  "obs.biom.bpd": [1, 12], "obs.biom.hc": [3, 40], "obs.biom.ac": [3, 45], "obs.biom.fl": [0.5, 10],
+  "obs.worksheet.os": [0, 15],
+  "obs.worksheet.q1": [0, 15], "obs.worksheet.q2": [0, 15],
+  "obs.worksheet.q3": [0, 15], "obs.worksheet.q4": [0, 15],
+  "obs.worksheet.sdp": [0, 20],
+  "obs.anom.vent": [1, 30], "obs.anom.cm": [1, 20],
+  "obs.dopp.uaPi": [0, 3], "obs.dopp.uaRi": [0, 1], "obs.dopp.uaSd": [1, 10],
+  "obs.dopp.mcaPi": [0, 4], "obs.dopp.mcaPsv": [5, 120], "obs.dopp.cpr": [0, 5], "obs.dopp.utPi": [0, 4],
+  "obs.bpp.obsMin": [1, 120],
+  "obs.maternal.cxLen": [5, 60], "obs.maternal.adnexaSize": [1, 200],
+  "obs.maternal.fibroidSize": [1, 200], "obs.maternal.scarTh": [0.5, 15],
+  "lesion.dim": [0.1, 40], "lesion.count": [2, 30], "seg.psv": [0, 600],
+};
+const fieldRange = (fid) => FIELD_RANGES[fid] || null;
+
 /* ---------- shared option banks ---------- */
 const ECHO = ["anechoic", "hypoechoic", "isoechoic", "hyperechoic", "heteroechoic", "mixed echogenicity", "predominantly cystic", "predominantly solid"];
 const MARGIN = ["well defined", "partly well defined", "ill defined", "poorly defined", "lobulated", "spiculated", "irregular"];
@@ -1529,14 +1602,19 @@ function Select({ label, value, onChange, opts }) {
   );
 }
 
-function NumIn({ label, unit, value, onChange }) {
+function NumIn({ label, unit, value, onChange, fid }) {
+  const r = fieldRange(fid);
+  const v = num(value);
+  const out = r && v != null && (v < r[0] || v > r[1]);
   return (
     <label className="block">
       <span className="block text-[11px] font-semibold uppercase tracking-wide text-emerald-800 mb-1.5">{label}{unit ? ` (${unit})` : ""}</span>
       <input
         type="number" step="any" value={value ?? ""} onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-white border-2 border-emerald-200 rounded-lg px-3 py-2 text-sm text-emerald-950 shadow-sm hover:border-emerald-400 focus:outline-none focus:border-emerald-700 focus:ring-4 focus:ring-emerald-700/15 transition-colors"
+        aria-invalid={out || undefined}
+        className={`w-full bg-white border-2 rounded-lg px-3 py-2 text-sm text-emerald-950 shadow-sm focus:outline-none focus:ring-4 transition-colors ${out ? "border-amber-500 bg-amber-50 hover:border-amber-600 focus:border-amber-600 focus:ring-amber-500/20" : "border-emerald-200 hover:border-emerald-400 focus:border-emerald-700 focus:ring-emerald-700/15"}`}
       />
+      {out && <span className="block text-[11px] font-medium text-amber-700 mt-1">Check this — expected {r[0]}–{r[1]}{unit ? ` ${unit}` : ""}</span>}
     </label>
   );
 }
@@ -1571,7 +1649,7 @@ function LesionEditor({ cfg, list, onChange }) {
           </div>
           <div className="p-3 grid grid-cols-2 md:grid-cols-4 gap-3">
             <Select label="Number" value={L.count} onChange={(x) => upd(i, { count: x })} opts={["single", "multiple"]} />
-            {L.count === "multiple" && <NumIn label="How many" value={L.n} onChange={(x) => upd(i, { n: x })} />}
+            {L.count === "multiple" && <NumIn fid="lesion.count" label="How many" value={L.n} onChange={(x) => upd(i, { n: x })} />}
             <Select label="Margin" value={L.margin} onChange={(x) => upd(i, { margin: x })} opts={["", ...MARGIN]} />
             <Select label="Shape" value={L.shape} onChange={(x) => upd(i, { shape: x })} opts={["", ...SHAPE]} />
             <Select label="Echogenicity" value={L.echo} onChange={(x) => upd(i, { echo: x })} opts={["", ...ECHO]} />
@@ -1579,9 +1657,9 @@ function LesionEditor({ cfg, list, onChange }) {
             <Select label="Septations" value={L.septa} onChange={(x) => upd(i, { septa: x })} opts={["", "yes", "thick", "no"]} />
             <Select label="Calcification" value={L.calc} onChange={(x) => upd(i, { calc: x })} opts={["", "internal punctate calcification", "coarse internal calcification", "peripheral rim calcification", "no calcification"]} />
             <Select label="Vascularity" value={L.vasc} onChange={(x) => upd(i, { vasc: x })} opts={["", ...VASC]} />
-            <NumIn label="Dimension 1" unit="cm" value={L.d1} onChange={(x) => upd(i, { d1: x })} />
-            <NumIn label="Dimension 2" unit="cm" value={L.d2} onChange={(x) => upd(i, { d2: x })} />
-            <NumIn label="Dimension 3" unit="cm" value={L.d3} onChange={(x) => upd(i, { d3: x })} />
+            <NumIn fid="lesion.dim" label="Dimension 1" unit="cm" value={L.d1} onChange={(x) => upd(i, { d1: x })} />
+            <NumIn fid="lesion.dim" label="Dimension 2" unit="cm" value={L.d2} onChange={(x) => upd(i, { d2: x })} />
+            <NumIn fid="lesion.dim" label="Dimension 3" unit="cm" value={L.d3} onChange={(x) => upd(i, { d3: x })} />
             {cfg.siteOpts ? (
               <Select label="Site" value={L.site} onChange={(x) => upd(i, { site: x })} opts={["", ...cfg.siteOpts]} />
             ) : (
@@ -1609,6 +1687,12 @@ function LesionEditor({ cfg, list, onChange }) {
 }
 
 /* --- doppler segment table --- */
+const psvOut = (row, k) => {
+  const v = num((row || {})[k]);
+  const r = fieldRange("seg.psv");
+  return v != null && (v < r[0] || v > r[1]);
+};
+
 function SegTable({ cfg, value, onChange, upper }) {
   const list = upper && cfg.listAlt ? cfg.listAlt : cfg.list;
   const rows = value || {};
@@ -1639,7 +1723,8 @@ function SegTable({ cfg, value, onChange, upper }) {
               {(cfg.num || []).map((n) => (
                 <td key={n} className="px-2 py-1">
                   <input type="number" step="any" value={(rows[name] || {})[n] || ""} onChange={(e) => set(name, n, e.target.value)}
-                    className="w-20 bg-white border border-emerald-300 rounded-md px-1.5 py-1.5 text-xs focus:outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/15" />
+                    title={psvOut(rows[name], n) ? "Check this — expected 0–600 cm/s" : undefined}
+                    className={`w-20 bg-white border rounded-md px-1.5 py-1.5 text-xs focus:outline-none focus:ring-2 ${psvOut(rows[name], n) ? "border-amber-500 bg-amber-50 focus:border-amber-600 focus:ring-amber-500/20" : "border-emerald-300 focus:border-emerald-700 focus:ring-emerald-700/15"}`} />
                 </td>
               ))}
             </tr>
@@ -1875,7 +1960,7 @@ export default function App() {
                           <TextIn area label={f.label} value={v[f.k]} onChange={(x) => setVal(sec.id, f.k, x)} />
                         </div>
                       );
-                      if (f.type === "num") return <NumIn key={f.k} label={f.label} unit={f.unit} value={v[f.k]} onChange={(x) => setVal(sec.id, f.k, x)} />;
+                      if (f.type === "num") return <NumIn key={f.k} fid={`${mod.id}.${sec.id}.${f.k}`} label={f.label} unit={f.unit} value={v[f.k]} onChange={(x) => setVal(sec.id, f.k, x)} />;
                       if (f.type === "txt") return <div key={f.k} className="col-span-2"><TextIn label={f.label} value={v[f.k]} onChange={(x) => setVal(sec.id, f.k, x)} /></div>;
                       return <Select key={f.k} label={f.label} value={v[f.k]} onChange={(x) => setVal(sec.id, f.k, x)} opts={f.opts} />;
                     })}
