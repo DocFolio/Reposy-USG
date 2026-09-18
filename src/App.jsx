@@ -1516,6 +1516,120 @@ const OBS = {
 
 const MODALITIES = [ABDOMEN, KUB, PELVIS, OBS, SOFT, THYROID, BREAST, SCROTUM, NSG, VENOUS, ARTERIAL, CAROTID, RIF, CHEST, MSK];
 
+
+/* Knowledge corner: findings are scanned for recognised entities, each
+   becoming a chip that opens Radiopaedia. Nothing is copied here — their
+   text is CC BY-NC-SA and belongs on their site, kept current by them. */
+const KNOWLEDGE_TERMS = [
+  ["fatty change|hepatic steatosis|fatty liver", "Hepatic steatosis"],
+  ["cirrhosis|nodular echotexture|coarse echotexture", "Cirrhosis"],
+  ["hepatomegaly", "Hepatomegaly"],
+  ["haemangioma|hemangioma", "Hepatic haemangioma"],
+  ["portal vein thrombosis", "Portal vein thrombosis"],
+  ["portal hypertension|hepatofugal", "Portal hypertension"],
+  ["cholelithiasis|gallbladder.{0,30}calcul|calcul.{0,30}gallbladder", "Cholelithiasis"],
+  ["cholecystitis|pericholecystic|Murphy sign is positive", "Acute cholecystitis"],
+  ["gallbladder polyp|polypoidal wall lesion", "Gallbladder polyp"],
+  ["choledocholithiasis|common bile duct.{0,40}calculus", "Choledocholithiasis"],
+  ["biliary radicles are dilated", "Biliary obstruction"],
+  ["pancreatitis|peripancreatic|bulky with hypoechoic", "Acute pancreatitis"],
+  ["splenomegaly|Spleen is enlarged", "Splenomegaly"],
+  ["hydronephrosis", "Hydronephrosis"],
+  ["hydroureteronephrosis", "Hydroureteronephrosis"],
+  ["renal calcul|nephrolithiasis|calculus is seen in the", "Nephrolithiasis"],
+  ["vesicoureteric junction|VUJ calculus", "Vesicoureteric junction calculus"],
+  ["raised cortical echogenicity", "Medical renal disease"],
+  ["simple cortical cyst", "Simple renal cyst"],
+  ["post-void residual", "Post-void residual volume"],
+  ["prostate is enlarged|median lobe indents", "Benign prostatic hyperplasia"],
+  ["trabeculated", "Bladder wall trabeculation"],
+  ["adenomyosis|venetian-blind", "Adenomyosis"],
+  ["fibroid|leiomyoma", "Uterine leiomyoma"],
+  ["endometrial polyp", "Endometrial polyp"],
+  ["peripherally arranged follicles|polycystic", "Polycystic ovary syndrome"],
+  ["corpus luteum", "Corpus luteum"],
+  ["O-RADS", "O-RADS"],
+  ["haemorrhagic cyst|hemorrhagic cyst", "Haemorrhagic ovarian cyst"],
+  ["endometrioma", "Endometrioma"],
+  ["free fluid.{0,30}pouch of Douglas", "Free pelvic fluid"],
+  ["oligohydramnios", "Oligohydramnios"],
+  ["polyhydramnios", "Polyhydramnios"],
+  ["praevia|previa", "Placenta praevia"],
+  ["placental abruption|retroplacental collection", "Placental abruption"],
+  ["accreta", "Placenta accreta spectrum"],
+  ["nuchal translucency", "Nuchal translucency"],
+  ["loops? around the neck", "Nuchal cord"],
+  ["breech", "Breech presentation"],
+  ["absent a-wave|reversed a-wave", "Ductus venosus Doppler"],
+  ["end-diastolic flow (?:reduced|absent|reversed)", "Umbilical artery Doppler"],
+  ["cerebroplacental ratio", "Cerebroplacental ratio"],
+  ["below the (?:10th|3rd) centile", "Fetal growth restriction"],
+  ["biophysical profile", "Biophysical profile"],
+  ["subchorionic haemorrhage|subchorionic hemorrhage", "Subchorionic haemorrhage"],
+  ["no demonstrable fetal cardiac activity", "Missed miscarriage"],
+  ["ventriculomegaly", "Fetal ventriculomegaly"],
+  ["echogenic intracardiac focus", "Echogenic intracardiac focus"],
+  ["pyelectasis", "Fetal pyelectasis"],
+  ["single umbilical artery|two vessels", "Single umbilical artery"],
+  ["TI-RADS|TR[1-5]", "ACR TI-RADS"],
+  ["thyroid inferno|diffusely heterogeneous and hypoechoic", "Thyroiditis"],
+  ["multinodular", "Multinodular goitre"],
+  ["loss of fatty hilum", "Pathological lymph node"],
+  ["BI-RADS", "BI-RADS"],
+  ["fibroadenoma", "Fibroadenoma"],
+  ["ductal ectasia", "Mammary duct ectasia"],
+  ["not parallel to the skin", "Breast ultrasound: taller-than-wide"],
+  ["varicocele", "Varicocele"],
+  ["hydrocele", "Hydrocele"],
+  ["epididymo-orchitis|bulky and hypoechoic.{0,40}increased vascularity", "Epididymo-orchitis"],
+  ["torsion|transverse lie", "Testicular torsion"],
+  ["microlithiasis", "Testicular microlithiasis"],
+  ["germinal matrix|intraventricular haemorrhage", "Germinal matrix haemorrhage"],
+  ["periventricular|cystic PVL", "Periventricular leukomalacia"],
+  ["cavum septi pellucidi", "Cavum septi pellucidi"],
+  ["deep vein thrombosis|non-compressible|acute hypoechoic thrombus", "Deep vein thrombosis"],
+  ["chronic echogenic thrombus|recanalisation", "Chronic deep vein thrombosis"],
+  ["saphenous.{0,30}reflux|incompetent perforators|reflux at the saphenofemoral", "Venous insufficiency"],
+  ["Baker's cyst", "Baker cyst"],
+  ["monophasic|triphasic|biphasic", "Peripheral arterial Doppler waveforms"],
+  ["complete occlusion", "Peripheral arterial disease"],
+  ["aneurysmal", "Arterial aneurysm"],
+  ["intima-media thickness", "Carotid intima-media thickness"],
+  ["ulcerated plaque|calcific plaque|soft plaque", "Carotid atherosclerosis"],
+  ["vertebral.{0,40}reversed|subclavian steal", "Subclavian steal syndrome"],
+  ["appendicitis|appendicolith", "Acute appendicitis"],
+  ["pleural effusion", "Pleural effusion"],
+  ["consolidation|air bronchograms", "Lung consolidation"],
+  ["B-lines", "Lung ultrasound B-lines"],
+  ["pneumothorax|Lung sliding is absent", "Pneumothorax"],
+  ["lipoma", "Lipoma"],
+  ["abscess|thick-walled collection with internal debris", "Soft tissue abscess"],
+  ["sebaceous|epidermoid", "Epidermoid cyst"],
+  ["ganglion", "Ganglion cyst"],
+  ["cobblestoning|oedematous subcutaneous", "Cellulitis"],
+  ["sinus tract", "Sinus tract"],
+  ["foreign body", "Soft tissue foreign body"],
+  ["tendinosis|thickened and hypoechoic", "Tendinosis"],
+  ["full thickness tear|partial thickness tear", "Tendon tear"],
+  ["bursa.{0,30}distended|bursitis", "Bursitis"],
+  ["synovial thickening", "Synovitis"],
+  ["joint effusion", "Joint effusion"],
+  ["ascites", "Ascites"],
+  ["lymphadenopathy|enlarged rounded nodes", "Lymphadenopathy"],
+];
+
+const RADIOPAEDIA = (term) =>
+  `https://radiopaedia.org/search?q=${encodeURIComponent(term)}&scope=articles`;
+
+function knowledgeTopics(text) {
+  if (!text) return [];
+  const hits = [];
+  for (const [pattern, label] of KNOWLEDGE_TERMS) {
+    if (new RegExp(pattern, "i").test(text) && !hits.includes(label)) hits.push(label);
+  }
+  return hits;
+}
+
 /* ============================================================
    AI LAYER — provider agnostic
    ============================================================ */
@@ -1735,6 +1849,62 @@ function SegTable({ cfg, value, onChange, upper }) {
   );
 }
 
+
+function KnowledgeCorner({ text, custom, setCustom }) {
+  const [open, setOpen] = useState(false);
+  const topics = useMemo(() => knowledgeTopics(text), [text]);
+  const go = (t) => { if (t && t.trim()) window.open(RADIOPAEDIA(t.trim()), "_blank", "noopener"); };
+
+  return (
+    <div className="bg-white border-2 border-emerald-200 rounded-xl shadow-sm overflow-hidden">
+      <button onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-2 px-4 py-3 bg-emerald-100 hover:bg-emerald-200 transition-colors text-left">
+        <span className="text-sm font-semibold text-emerald-900">Knowledge corner</span>
+        {topics.length > 0 && (
+          <span className="text-[11px] font-semibold bg-emerald-700 text-white rounded-full px-2 py-0.5">{topics.length}</span>
+        )}
+        <span className="ml-auto text-emerald-700 text-xs">{open ? "Hide" : "Show"}</span>
+      </button>
+
+      {open && (
+        <div className="p-4 space-y-3">
+          {topics.length > 0 ? (
+            <>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-800">Found in this report</p>
+              <div className="flex flex-wrap gap-2">
+                {topics.map((t) => (
+                  <button key={t} onClick={() => go(t)}
+                    className="text-[13px] px-3 py-1.5 rounded-lg border-2 border-emerald-300 text-emerald-800 bg-white hover:bg-emerald-700 hover:text-white hover:border-emerald-700 transition-colors">
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="text-[13px] text-emerald-700">Recognised findings will appear here as you fill the form.</p>
+          )}
+
+          <div className="pt-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-800 mb-1.5">Look up anything else</p>
+            <div className="flex gap-2">
+              <input value={custom} onChange={(e) => setCustom(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") go(custom); }}
+                placeholder="e.g. focal nodular hyperplasia"
+                className="flex-1 bg-white border-2 border-emerald-200 rounded-lg px-3 py-2 text-sm text-emerald-950 focus:outline-none focus:border-emerald-700 focus:ring-4 focus:ring-emerald-700/15" />
+              <button onClick={() => go(custom)} disabled={!custom || !custom.trim()}
+                className="text-sm font-semibold px-4 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 disabled:opacity-30 transition-colors">Open</button>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-emerald-600 leading-snug pt-1">
+            Opens Radiopaedia in a new tab. Reference material by its authors, not part of this report.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ============================================================
    MAIN
    ============================================================ */
@@ -1749,6 +1919,7 @@ export default function App() {
   const [err, setErr] = useState("");
   const [showCfg, setShowCfg] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [kcTerm, setKcTerm] = useState("");
   const [cfg, setCfg] = useState({ provider: "custom", url: "/api/ai", model: "glm-4.6", key: "" });
 
   const mod = MODALITIES.find((m) => m.id === modId);
@@ -1757,7 +1928,7 @@ export default function App() {
     setModId(m.id);
     setState({});
     setEnabled(Object.fromEntries(m.sections.map((s) => [s.id, true])));
-    setExtra(""); setImpression(""); setAiOut(""); setErr("");
+    setExtra(""); setImpression(""); setAiOut(""); setErr(""); setKcTerm("");
   };
 
   const setVal = useCallback((sec, k, v) => setState((s) => ({ ...s, [sec]: { ...(s[sec] || {}), [k]: v } })), []);
@@ -2016,6 +2187,8 @@ export default function App() {
             )}
             {err && <p className="text-xs text-red-700 leading-snug">{err}</p>}
           </div>
+
+          <KnowledgeCorner text={fullReport} custom={kcTerm} setCustom={setKcTerm} />
 
           <p className="text-xs text-emerald-700 leading-snug">
             Generated from your selections alone — the AI drafts only the impression and cannot add a finding you did not select. Verify everything before signing.
