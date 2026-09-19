@@ -1696,7 +1696,19 @@ const PROVIDERS = {
   custom: { label: "Custom / your backend proxy", url: "", model: "", shape: "openai" },
 };
 
+/* Strip anything identifier-shaped before it leaves the browser.
+   The server scrubs again; this keeps it out of the request entirely. */
+function scrubPHI(text) {
+  return String(text)
+    .replace(/\b(?:\+91[-\s]?)?[6-9]\d{9}\b/g, "[number removed]")
+    .replace(/\b\d{4}\s?\d{4}\s?\d{4}\b/g, "[number removed]")
+    .replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "[email removed]")
+    .replace(/\b(?:mr|mrs|ms|master|baby of|b\/o|w\/o|s\/o|d\/o)\.?\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/gi, "[name removed]")
+    .replace(/\b(?:uhid|mrn|ip\s?no|op\s?no|reg\s?no|hosp\s?no)\.?[:\s#-]*[A-Za-z0-9/-]+/gi, "[id removed]");
+}
+
 async function callAI(cfg, system, user) {
+  user = scrubPHI(user);
   const p = PROVIDERS[cfg.provider] || PROVIDERS.custom;
   const url = cfg.url || p.url;
   const model = cfg.model || p.model;
