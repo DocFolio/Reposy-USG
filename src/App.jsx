@@ -87,6 +87,7 @@ const FIELD_RANGES = {
   "carotid.vel.lCca": [5, 600], "carotid.vel.lIca": [5, 600], "carotid.vel.lEca": [5, 600],
   "rif.app.dia": [2, 25], "rif.app.wall": [0.5, 10], "rif.app.collVol": [0, 1000],
   "chest.pl.rVol": [0, 5000], "chest.pl.lVol": [0, 5000],
+  "chest.pl.rSep": [1, 250], "chest.pl.lSep": [1, 250],
   "msk.joint.effDepth": [0.5, 60],
   "obs.type.fhr": [80, 220],
   "obs.early.msd": [1, 60], "obs.early.yolkSize": [1, 12],
@@ -1148,10 +1149,13 @@ const CHEST = {
       title: "Pleural spaces",
       normal: { r: "no", l: "no", slide: "present bilaterally" },
       fields: [
+        F.head("Effusion volume — Balik formula: volume (ml) = 20 × maximal pleural separation (mm), measured at the lung base, supine, end-expiration"),
         F.sel("r", "Right pleural effusion", ["", "no", "minimal", "mild", "moderate", "gross"]),
-        F.num("rVol", "Right approximate volume", "ml"),
+        F.num("rSep", "Right pleural separation", "mm", { derives: ["rVol", (x) => (num(x) == null ? "" : String(Math.round(num(x) * 20)))], hint: "Drives the volume beside it" }),
+        F.num("rVol", "Right approximate volume", "ml", { hint: "Auto from separation — editable" }),
         F.sel("l", "Left pleural effusion", ["", "no", "minimal", "mild", "moderate", "gross"]),
-        F.num("lVol", "Left approximate volume", "ml"),
+        F.num("lSep", "Left pleural separation", "mm", { derives: ["lVol", (x) => (num(x) == null ? "" : String(Math.round(num(x) * 20)))], hint: "Drives the volume beside it" }),
+        F.num("lVol", "Left approximate volume", "ml", { hint: "Auto from separation — editable" }),
         F.sel("sept", "Internal character", ["", "anechoic", "with internal echoes", "with fine septations", "with thick septations and loculations"]),
         F.sel("thick", "Pleural thickening", YN),
         F.sel("cons", "Lung parenchyma", ["", "no consolidation", "subpleural consolidation", "consolidation with air bronchograms"]),
@@ -1160,8 +1164,13 @@ const CHEST = {
       ],
       render: (v) => {
         const l = [];
-        const side = (x, vol, name) => (x && x !== "no" ? j(cap(x), `${name} pleural effusion is noted`, num(vol) != null ? `, approximate volume ${vol} ml` : null) + "." : null);
-        const a = side(v.r, v.rVol, "right"), b = side(v.l, v.lVol, "left");
+        const side = (x, vol, sep, name) =>
+          x && x !== "no"
+            ? j(cap(x), `${name} pleural effusion is noted`,
+                num(sep) != null ? `, with a maximal pleural separation of ${sep} mm` : null,
+                num(vol) != null ? `, approximate volume ${vol} ml${num(sep) != null ? " (Balik formula)" : ""}` : null) + "."
+            : null;
+        const a = side(v.r, v.rVol, v.rSep, "right"), b = side(v.l, v.lVol, v.lSep, "left");
         if (a) l.push(a); if (b) l.push(b);
         if (!a && !b) l.push("No pleural effusion is seen on either side.");
         if ((a || b) && v.sept) l.push(`The effusion is ${v.sept}.`);
@@ -1758,7 +1767,7 @@ function Select({ label, value, onChange, opts }) {
   );
 }
 
-function NumIn({ label, unit, value, onChange, fid }) {
+function NumIn({ label, unit, value, onChange, fid, hint }) {
   const r = fieldRange(fid);
   const v = num(value);
   const out = r && v != null && (v < r[0] || v > r[1]);
@@ -1770,7 +1779,9 @@ function NumIn({ label, unit, value, onChange, fid }) {
         aria-invalid={out || undefined}
         className={`w-full bg-white border-2 rounded-lg px-3 py-2 text-sm text-emerald-950 shadow-sm focus:outline-none focus:ring-4 transition-colors ${out ? "border-amber-500 bg-amber-50 hover:border-amber-600 focus:border-amber-600 focus:ring-amber-500/20" : "border-emerald-200 hover:border-emerald-400 focus:border-emerald-700 focus:ring-emerald-700/15"}`}
       />
-      {out && <span className="block text-[11px] font-medium text-amber-700 mt-1">Check this — expected {r[0]}–{r[1]}{unit ? ` ${unit}` : ""}</span>}
+      {out
+        ? <span className="block text-[11px] font-medium text-amber-700 mt-1">Check this — expected {r[0]}–{r[1]}{unit ? ` ${unit}` : ""}</span>
+        : hint && <span className="block text-[11px] text-emerald-600 mt-1">{hint}</span>}
     </label>
   );
 }
@@ -2185,7 +2196,8 @@ export default function App() {
                           <TextIn area label={f.label} value={v[f.k]} onChange={(x) => setVal(sec.id, f.k, x)} />
                         </div>
                       );
-                      if (f.type === "num") return <NumIn key={f.k} fid={`${mod.id}.${sec.id}.${f.k}`} label={f.label} unit={f.unit} value={v[f.k]} onChange={(x) => setVal(sec.id, f.k, x)} />;
+                      if (f.type === "num") return <NumIn key={f.k} fid={`${mod.id}.${sec.id}.${f.k}`} label={f.label} unit={f.unit} hint={f.hint} value={v[f.k]}
+                        onChange={(x) => { setVal(sec.id, f.k, x); if (f.derives) setVal(sec.id, f.derives[0], f.derives[1](x)); }} />;
                       if (f.type === "txt") return <div key={f.k} className="col-span-2"><TextIn label={f.label} value={v[f.k]} onChange={(x) => setVal(sec.id, f.k, x)} /></div>;
                       return <Select key={f.k} label={f.label} value={v[f.k]} onChange={(x) => setVal(sec.id, f.k, x)} opts={f.opts} />;
                     })}
