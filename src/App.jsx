@@ -1628,9 +1628,9 @@ const KNOWLEDGE_TERMS = [
 const RADIOPAEDIA = (term) =>
   `https://radiopaedia.org/search?q=${encodeURIComponent(term)}&scope=articles`;
 
-const DX_LEAD = /(?:suggestive of|suspicious for|likely represents|likely a|consistent with|in keeping with|features of|compatible with|may represent|represents)\s+(?:a |an |the )?([a-z][a-z0-9 ,'-]{3,60}?)(?=\s+or\s+|[.;,)]|$)/gi;
-const DX_ALT = /\bor\s+(?:a |an |the )?([a-z][a-z0-9 '-]{3,60}?)(?=[.;,)]|$)/gi;
-const DX_NOISE = /^(?:the|this|these|which|further|clinical|correlation|no |any )/i;
+const DX_LEAD = /(?:differentials?\s+(?:diagnosis\s+)?(?:includes?|are|is)|possibilities include|consider(?:ations?)?(?: include)?|favou?rs?|suggestive of|suspicious for|likely represents|likely a|consistent with|in keeping with|features of|compatible with|may represent|represents|impression of)\s*:?\s*(?:a |an |the )?([a-z][a-z0-9 ,'()/-]{3,70}?)(?=\s+(?:or|versus|vs\.?|rather than)\s+|[.;]|$)/gi;
+const DX_ALT = /\b(?:or|versus|vs\.?|rather than)\s+(?:a |an |the )?([a-z][a-z0-9 '()/-]{3,70}?)(?=\s+(?:or|versus)\s+|[.;,)]|$)/gi;
+const DX_NOISE = /^(?:the|this|these|which|further|clinical|correlation|no |any |other|above|below|similar|same)\b/i;
 
 function impressionDiagnoses(text) {
   if (!text) return [];
@@ -1651,16 +1651,25 @@ function impressionDiagnoses(text) {
 
 function knowledgeTopics(text, modId) {
   if (!text) return [];
-  const hits = [];
+
+  /* Diagnoses named in the impression come first and win: if the report
+     says "chronic calcified haematoma", that is the useful chip, and the
+     bare keyword "Haematoma" it contains is noise. */
+  const dx = impressionDiagnoses(text).map((d) => d.charAt(0).toUpperCase() + d.slice(1));
+
+  const keywords = [];
   for (const [pattern, label, mods] of KNOWLEDGE_TERMS) {
     if (mods && modId && !mods.includes(modId)) continue;
-    if (new RegExp(pattern, "i").test(text) && !hits.includes(label)) hits.push(label);
+    if (new RegExp(pattern, "i").test(text) && !keywords.includes(label)) keywords.push(label);
   }
-  for (const d of impressionDiagnoses(text)) {
-    const dup = hits.some((h) => h.toLowerCase().includes(d.toLowerCase()) || d.toLowerCase().includes(h.toLowerCase()));
-    if (!dup) hits.push(d.charAt(0).toUpperCase() + d.slice(1));
-  }
-  return hits;
+
+  const subsumed = (label) =>
+    dx.some((d) => {
+      const a = d.toLowerCase(), b = label.toLowerCase();
+      return a === b || a.includes(b) || b.includes(a);
+    });
+
+  return [...dx, ...keywords.filter((k) => !subsumed(k))];
 }
 
 /* ============================================================
