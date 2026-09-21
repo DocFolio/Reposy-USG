@@ -16,7 +16,7 @@ const PER_IP_LIMIT = 20;
 const PER_IP_WINDOW_MS = 10 * 60e3;
 const DAILY_LIMIT = 800;
 const MAX_CHARS = 8000;
-const MAX_TOKENS = 700;
+const MAX_TOKENS = 2000;
 
 const hits = new Map();
 let day = new Date().toISOString().slice(0, 10);
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
     const r = await fetch("https://open.bigmodel.cn/api/paas/v4/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GLM_KEY}` },
-      body: JSON.stringify({ model: "glm-4.6", temperature: 0.2, max_tokens: MAX_TOKENS, messages: clean }),
+      body: JSON.stringify({ model: "glm-4.6", temperature: 0.2, max_tokens: MAX_TOKENS, thinking: { type: "disabled" }, messages: clean }),
     });
     const data = await r.json();
     if (!r.ok) return res.status(r.status).json({ error: "Upstream error" });

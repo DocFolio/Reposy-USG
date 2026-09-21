@@ -2056,6 +2056,7 @@ export default function App() {
     setBusy(true); setErr(""); setAiOut("");
     try {
       const out = await callAI(cfg, AI_SYSTEM, `Modality: ${mod.name}\n\nFINDINGS\n${findings}`);
+      if (!out || !out.trim()) throw new Error("the model returned an empty response");
       setAiOut(out.trim());
     } catch (e) {
       setErr(`The impression service is unavailable right now (${e.message}). The report above is complete — write the impression yourself, or try again shortly.`);
