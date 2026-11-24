@@ -1,8 +1,12 @@
 /* Reposy-USG — AI proxy (Google Gemini).
-   The app sends OpenAI-shaped messages; this translates them to
-   Gemini's format and back, so the frontend is unchanged. */
+   The free tier returns 503 under load, so this walks a list of models
+   and retries briefly rather than surfacing a transient failure. */
 
-const MODEL = "gemini-3.8-flash";
+const MODELS = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.6-flash"];
+const ROUNDS = 2;
+const GAP_MS = 600;
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function scrub(text) {
   return String(text)
@@ -13,8 +17,25 @@ function scrub(text) {
     .replace(/\b(?:uhid|mrn|ip\s?no|op\s?no|reg\s?no|hosp\s?no)\.?[:\s#-]*[A-Za-z0-9/-]+/gi, "[id removed]");
 }
 
-function allowed(host) {
-  return host.startsWith("localhost") || (host.endsWith(".vercel.app") && host.includes("reposy"));
+const allowed = (host) =>
+  host.startsWith("localhost") || (host.endsWith(".vercel.app") && host.includes("reposy"));
+
+async function tryModel(model, system, user) {
+  const r = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_KEY },
+      body: JSON.stringify({
+        system_instruction: system ? { parts: [{ text: system }] } : undefined,
+        contents: [{ role: "user", parts: [{ text: user }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 2000 },
+      }),
+    }
+  );
+  const data = await r.json().catch(() => ({}));
+  const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || "").join("");
+  return { status: r.status, text, raw: data?.error?.message || "" };
 }
 
 export default async function handler(req, res) {
@@ -30,36 +51,26 @@ export default async function handler(req, res) {
   const system = messages.filter((m) => m.role === "system").map((m) => scrub(m.content)).join("\n\n");
   const user = messages.filter((m) => m.role !== "system").map((m) => scrub(m.content)).join("\n\n");
 
-  try {
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_KEY },
-        body: JSON.stringify({
-          system_instruction: system ? { parts: [{ text: system }] } : undefined,
-          contents: [{ role: "user", parts: [{ text: user }] }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 2000 },
-        }),
+  let last = { status: 0, raw: "" };
+  for (let round = 0; round < ROUNDS; round++) {
+    for (const model of MODELS) {
+      try {
+        const out = await tryModel(model, system, user);
+        if (out.status === 200 && out.text.trim())
+          return res.status(200).json({ choices: [{ message: { role: "assistant", content: out.text } }] });
+        last = out;
+        if (out.status === 401 || out.status === 403)
+          return res.status(out.status).json({ error: "The AI service rejected its credentials." });
+      } catch (e) {
+        last = { status: 502, raw: e.message };
       }
-    );
-    const data = await r.json();
-
-    if (!r.ok) {
-      const raw = data?.error?.message || "";
-      const friendly =
-        r.status === 429 ? "The AI service is rate limited right now. Try again in a minute."
-        : r.status === 401 || r.status === 403 ? "The AI service rejected its credentials."
-        : raw || "The AI service returned an error.";
-      return res.status(r.status).json({ error: friendly });
+      await sleep(GAP_MS);
     }
-
-    const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || "").join("");
-    if (!text.trim()) return res.status(502).json({ error: "The AI service returned an empty response." });
-
-    /* Reply in the shape the app already reads. */
-    return res.status(200).json({ choices: [{ message: { role: "assistant", content: text } }] });
-  } catch {
-    return res.status(502).json({ error: "Could not reach the impression service." });
   }
+
+  const friendly =
+    last.status === 503 || last.status === 429
+      ? "The free AI tier is busy right now. The report above is complete — write the impression yourself, or try again in a minute."
+      : last.raw || "The AI service is unavailable.";
+  return res.status(503).json({ error: friendly });
 }
