@@ -1669,7 +1669,12 @@ function knowledgeTopics(text, modId) {
   const keywords = [];
   for (const [pattern, label, mods] of KNOWLEDGE_TERMS) {
     if (mods && modId && !mods.includes(modId)) continue;
-    if (new RegExp(pattern, "i").test(text) && !keywords.includes(label)) keywords.push(label);
+    /* Skip a match that sits inside a negated sentence — "no enlarged
+       regional lymph nodes are seen" must not raise a lymphadenopathy chip. */
+    const re = new RegExp(pattern, "i");
+    const hit = text.split(/(?<=[.;])\s+/).find((sent) => re.test(sent));
+    const negated = hit && /\b(no|not|without|absent|free of|negative for)\b/i.test(hit.split(re)[0] || "");
+    if (hit && !negated && !keywords.includes(label)) keywords.push(label);
   }
 
   const subsumed = (label) =>
